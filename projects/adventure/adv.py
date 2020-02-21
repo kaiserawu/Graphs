@@ -12,9 +12,9 @@ world = World()
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
-map_file = "maps/test_loop.txt"
+# map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
@@ -40,19 +40,6 @@ class Queue():
             return None
     def size(self):
         return len(self.queue)
-
-class Stack():
-    def __init__(self):
-        self.stack = []
-    def push(self, value):
-        self.stack.append(value)
-    def pop(self):
-        if self.size() > 0:
-            return self.stack.pop()
-        else:
-            return None
-    def size(self):
-        return len(self.stack)
 
 class Adv_Graph:
     def __init__(self):
@@ -102,10 +89,39 @@ class Adv_Graph:
             self.travel_and_map(rand_direction)
             curr_unexplored = self.list_all_unexplored()
     
+    def backtrack(self):
+        queue = Queue()
+        queue.enqueue([(self.player.current_room.id, None)])
+        visited = set()
+
+        while queue.size() > 0:
+            curr_path = queue.dequeue()
+            curr_vector = curr_path[-1]
+            curr_room = curr_vector[0]
+            visited.add(curr_room)
+            for direction in self.rooms[curr_room]:
+                directed_location = self.rooms[curr_room][direction]
+                if directed_location == '?':
+                    for vector in curr_path:
+                        if vector[1] != None:
+                            self.player.travel(vector[1])
+                            traversal_path.append(vector[1])
+                    return
+                if directed_location not in visited:
+                    path_copy = curr_path[:]
+                    path_copy.append((directed_location, direction))
+                    queue.enqueue(path_copy)
+    
+    def find_all_rooms(self):
+        while True:
+            self.explore()
+            if len(self.rooms) == len(room_graph):
+                return
+            self.backtrack()
+    
 
 adv_graph = Adv_Graph()
-adv_graph.explore()
-print(traversal_path)
+adv_graph.find_all_rooms()
 
 
 
