@@ -10,9 +10,9 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
+# map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
-# map_file = "maps/test_loop.txt"
+map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
 # map_file = "maps/main_maze.txt"
 
@@ -27,6 +27,7 @@ player = Player(world.starting_room)
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
+traversal_path = []
 class Queue():
     def __init__(self):
         self.queue = []
@@ -57,14 +58,34 @@ class Adv_Graph:
     def __init__(self):
         self.rooms = {}
         self.player = Player(world.starting_room)
+        self.last_room = self.player.current_room.id
+        self.travel_and_map(None, True)
 
-    def discover_room(self):
+    def travel_and_map(self, curr_direction, first_room=False):
+        self.last_room = self.player.current_room.id
+
+        if not first_room:
+            self.player.travel(curr_direction)
+            traversal_path.append(curr_direction)
+
         room_id = self.player.current_room.id
+
         if room_id not in self.rooms:
             directions = self.player.current_room.get_exits()
             self.rooms[room_id] = {}
             for direction in directions:
                 self.rooms[room_id][direction] = '?'
+
+        if curr_direction != None:
+            if curr_direction == 'n':
+                self.rooms[room_id]['s'] = self.last_room
+            elif curr_direction == 's':
+                self.rooms[room_id]['n'] = self.last_room
+            elif curr_direction == 'e':
+                self.rooms[room_id]['w'] = self.last_room
+            elif curr_direction == 'w':
+                self.rooms[room_id]['e'] = self.last_room
+            self.rooms[self.last_room][curr_direction] = room_id
     
     def list_all_unexplored(self):
         curr_room = self.rooms[self.player.current_room.id]
@@ -74,18 +95,17 @@ class Adv_Graph:
                 unexplored_directions.append(direction)
         return unexplored_directions
     
-    def test(self):
-        self.discover_room()
-        print(self.list_all_unexplored())
+    def explore(self):
+        curr_unexplored = self.list_all_unexplored()
+        while(len(curr_unexplored) > 0):
+            rand_direction = curr_unexplored[random.randint(0, len(curr_unexplored) - 1)]
+            self.travel_and_map(rand_direction)
+            curr_unexplored = self.list_all_unexplored()
     
 
 adv_graph = Adv_Graph()
-adv_graph.test()
-
-
-
-
-traversal_path = []
+adv_graph.explore()
+print(traversal_path)
 
 
 
